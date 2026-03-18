@@ -49,7 +49,7 @@ We use real-time data to trigger claims automatically. No paperwork is required 
 ---
 
 ## 📺 Phase 1 Video Submission
-[Link to My 2-Minute Strategy Video](PASTE_YOUR_LINK_HERE)
+[Link to My 2-Minute Strategy Video](https://youtu.be/IMSWTLEU8Vg)
 
 ---
 *Developed for the Guidewire DEVTrails Hackathon 2026.*
