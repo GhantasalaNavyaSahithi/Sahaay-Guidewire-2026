@@ -53,3 +53,17 @@ We use real-time data to trigger claims automatically. No paperwork is required 
 
 ---
 *Developed for the Guidewire DEVTrails Hackathon 2026.*
+
+## 🚀 Deploy From GitHub (Render)
+
+This repository is configured for one-service deployment using `render.yaml`.
+
+1. Go to Render dashboard and choose **New +** > **Blueprint**.
+2. Connect the repository: `GhantasalaNavyaSahithi/Sahaay-Guidewire-2026`.
+3. Render auto-detects `render.yaml` and creates the service.
+4. Click **Apply** to deploy.
+5. Open `/healthz` on your Render URL to confirm status.
+
+Notes:
+- Backend and frontend run in one Node service.
+- In production, frontend API calls use same-origin `/api` automatically.
