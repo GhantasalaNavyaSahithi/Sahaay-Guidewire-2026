@@ -54,6 +54,34 @@ We use real-time data to trigger claims automatically. No paperwork is required 
 ---
 *Developed for the Guidewire DEVTrails Hackathon 2026.*
 
+---
+
+## ✅ Phase 3 (Scale & Optimize) - Implemented
+
+### 1) Anti-Cheating Fraud Detection
+- **GPS validation:** claim location is validated against the impacted zone center.
+- **Data verification:** claim reason is cross-checked against live/mock weather signals.
+- **Spoofing detection:** mock-location, provider mismatch, impossible speed, and low-trust device signals are flagged.
+
+### 2) Instant Payout (Sandbox Simulation)
+- Added a **mock payout gateway** that behaves like Razorpay test-mode settlement.
+- On approved claims, payout is credited immediately to the in-app worker wallet with references like `rzp_test_*`.
+
+### 3) Dual Dashboards
+- **Worker dashboard:** weekly coverage, total earned-back amount, weather alert, and claim activity.
+- **Admin dashboard:** paid vs flagged claims, riskiest areas, disruption forecast, and live simulation controls.
+
+### 4) Final Demo Assets
+- Video runbook: `PHASE3_DEMO_RUNBOOK.md`
+- Pitch deck content: `PHASE3_PITCH_DECK.md` (export to PDF)
+
+### 5) New Phase 3 APIs
+- `GET /api/dashboard/worker/:userId` - Worker overview
+- `GET /api/dashboard/admin/overview` - Admin analytics
+- `GET /api/claim/trigger/:type` - Manual disruption trigger
+- `POST /api/claim/trigger/:type` - Trigger with payload for anti-cheat simulation
+- `GET /api/claim/trigger/rain?mockLocation=1&provider=mock-gps` - Spoof attempt demo
+
 ## 🚀 Deploy From GitHub (Render)
 
 This repository is configured for one-service deployment using `render.yaml`.

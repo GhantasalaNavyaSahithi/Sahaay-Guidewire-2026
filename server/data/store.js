@@ -6,6 +6,8 @@ const state = {
   policies: Array.isArray(seed.policies) ? [...seed.policies] : [],
   claims: Array.isArray(seed.claims) ? [...seed.claims] : [],
   feed: Array.isArray(seed.feed) ? [...seed.feed] : [],
+  payouts: Array.isArray(seed.payouts) ? [...seed.payouts] : [],
+  wallets: Array.isArray(seed.wallets) ? [...seed.wallets] : [],
   system: {
     lastScanAt: null,
     scanCount: 0,
@@ -145,6 +147,50 @@ const findRecentClaimByType = (policyId, type, withinHours = 6) => {
   }) || null;
 };
 
+const ensureWallet = (userId) => {
+  const existing = state.wallets.find((wallet) => wallet.userId === userId);
+  if (existing) return existing;
+
+  const wallet = {
+    id: createId("wallet"),
+    userId,
+    balance: 0,
+    totalCredited: 0,
+    updatedAt: now()
+  };
+
+  state.wallets.unshift(wallet);
+  trim(state.wallets, 60);
+  return wallet;
+};
+
+const recordPayout = (payload) => {
+  const payout = {
+    id: createId("payout"),
+    createdAt: now(),
+    status: "processed",
+    mode: "sandbox",
+    gateway: "mock-gateway",
+    ...payload
+  };
+
+  state.payouts.unshift(payout);
+  trim(state.payouts, 120);
+
+  if (payout.status === "processed") {
+    const wallet = ensureWallet(payout.userId);
+    wallet.balance = Number(wallet.balance || 0) + Number(payout.amount || 0);
+    wallet.totalCredited = Number(wallet.totalCredited || 0) + Number(payout.amount || 0);
+    wallet.updatedAt = now();
+  }
+
+  return payout;
+};
+
+const getWalletByUser = (userId) => ensureWallet(userId);
+const listPayoutsByUser = (userId) => state.payouts.filter((payout) => payout.userId === userId);
+const listPayouts = () => state.payouts;
+
 const setSystemStatus = (updates) => {
   state.system = {
     ...state.system,
@@ -167,9 +213,13 @@ module.exports = {
   getPolicy,
   getPolicyByUser,
   getUser,
+  getWalletByUser,
   listClaimsByPolicy,
   listClaimsByUser,
   listPoliciesByUser,
+  listPayouts,
+  listPayoutsByUser,
+  recordPayout,
   setSystemStatus,
   state,
   updateClaim,

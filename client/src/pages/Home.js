@@ -1,6 +1,6 @@
 import React from "react";
 
-function Home({ onGetStarted }) {
+function Home({ onGetStarted, onOpenAdmin }) {
 	const featureCards = [
 		{
 			title: "Zero Friction",
@@ -48,6 +48,9 @@ function Home({ onGetStarted }) {
 						<div className="hero-actions">
 							<button className="btn btn-primary" onClick={onGetStarted}>
 								Get Started
+							</button>
+							<button className="btn btn-secondary" onClick={onOpenAdmin}>
+								Open Admin Dashboard
 							</button>
 							<p className="hero-note">No forms. No stress. You stay focused on deliveries.</p>
 						</div>

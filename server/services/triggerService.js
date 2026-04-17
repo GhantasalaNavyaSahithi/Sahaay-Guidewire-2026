@@ -1,6 +1,7 @@
 const store = require("../data/store");
-const { addFeed, createClaim, findRecentClaimByType, getUser, setSystemStatus } = store;
+const { addFeed, findRecentClaimByType, getUser, setSystemStatus } = store;
 const { evaluateCoverageSignal, scoreClaimRisk } = require("./aiModel");
+const { processClaimPipeline } = require("./claimPipelineService");
 const { detectWeatherTriggers, getWeatherSnapshot } = require("./weatherService");
 
 let scannerRunning = false;
@@ -33,37 +34,35 @@ const getPlatformStatus = async () => {
 	}
 };
 
-const buildAutoClaim = ({ user, policy, trigger, weatherSnapshot, source }) => {
+const buildAutoClaim = async ({ user, policy, trigger, weatherSnapshot, source }) => {
 	const recentClaims = store.listClaimsByPolicy(policy.id).filter((claim) => claim.type === trigger.type);
-	const verification = scoreClaimRisk({ policy, user, trigger, weatherSnapshot, recentClaims });
+	const modelVerification = scoreClaimRisk({ policy, user, trigger, weatherSnapshot, recentClaims });
 
-	if (!verification.approved && !trigger.autoApproved) {
+	if (!modelVerification.approved && !trigger.autoApproved) {
 		return null;
 	}
 
-	const claim = createClaim({
-		userId: user.id,
-		policyId: policy.id,
+	const result = await processClaimPipeline({
+		user,
+		policy,
 		type: trigger.type,
 		payoutAmount: trigger.payoutAmount,
 		source,
-		autoTriggered: true,
-		verification,
-		status: "Approved"
-	});
-
-	addFeed({
-		kind: "claim",
-		title: `${trigger.label} resolved automatically`,
-		description: `${user.name || "Worker"} received ₹${trigger.payoutAmount} after ${trigger.message.toLowerCase()}.`,
+		triggerLabel: trigger.label,
+		triggerMessage: trigger.message,
 		severity: trigger.severity,
-		source: trigger.source,
-		policyId: policy.id,
-		userId: user.id,
-		claimId: claim.id
+		claimInput: {
+			declaredReason: trigger.message,
+			deviceMeta: {
+				gpsProvider: "device-sensor",
+				isMockLocationApp: false,
+				speedKmph: 38
+			}
+		},
+		modelVerification
 	});
 
-	return claim;
+	return result.claim;
 };
 
 const scanPolicies = async () => {
@@ -112,7 +111,7 @@ const scanPolicies = async () => {
 				continue;
 			}
 
-			const claim = buildAutoClaim({ user, policy, trigger, weatherSnapshot, source: trigger.source });
+			const claim = await buildAutoClaim({ user, policy, trigger, weatherSnapshot, source: trigger.source });
 			if (claim) generatedClaims.push(claim);
 		}
 

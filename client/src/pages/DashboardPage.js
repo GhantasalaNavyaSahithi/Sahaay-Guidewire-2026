@@ -101,6 +101,7 @@ function DashboardPage({ user, onRestart, onLogout }) {
 	const [loading, setLoading] = useState(true);
 	const [feeds, setFeeds] = useState([]);
 	const [autoClaims, setAutoClaims] = useState([]);
+	const [workerOverview, setWorkerOverview] = useState(null);
 	const [systemStatus, setSystemStatus] = useState({ scanCount: 0, lastScanAt: null, activeTriggers: [] });
 	const [processingClaim, setProcessingClaim] = useState(false);
 	const [scanning, setScanning] = useState(false);
@@ -130,11 +131,15 @@ function DashboardPage({ user, onRestart, onLogout }) {
 
 			const claimsResponse = await API.get(`/claim/user/${user.id || "demo-user"}`);
 			setAutoClaims((claimsResponse.data?.claims || []).slice(0, 5));
+
+			const workerOverviewResponse = await API.get(`/dashboard/worker/${user.id || "demo-user"}`);
+			setWorkerOverview(workerOverviewResponse.data || null);
 		} catch (error) {
 			console.error("Dashboard load error:", error);
 			setQuote({ finalPremium: 25, aiSignal: { riskScore: 0.45, summary: "Moderate risk", recommendedCoverageHours: 24, model: "mock-ml-risk-v1" } });
 			setFeeds([]);
 			setAutoClaims([]);
+			setWorkerOverview(null);
 		} finally {
 			if (!silent) {
 				setLoading(false);
@@ -152,6 +157,9 @@ function DashboardPage({ user, onRestart, onLogout }) {
 	const currentZone = riskMeta[user.area] || riskMeta.safe;
 	const premiumAdjustments = quote?.factors || [];
 	const isLiveActive = (systemStatus.scanCount || 0) > 0;
+	const totalEarnedBack = workerOverview?.earningsProtection?.totalClaimed || 0;
+	const activeWeeklyCoverage = workerOverview?.earningsProtection?.weeklyCoverage || `₹${quote?.finalPremium || 25}/week`;
+	const weatherAlert = workerOverview?.weatherAlert;
 
 	const runAutomationScan = async () => {
 		setScanning(true);
@@ -246,16 +254,16 @@ function DashboardPage({ user, onRestart, onLogout }) {
 						<p className="subtitle">This policy watches weather, route disruption, and platform downtime in the background, then prices and pays automatically when risk is confirmed.</p>
 						<div className="metric-row">
 							<div className="metric-card">
-								<strong>₹{quote?.finalPremium || 25}</strong>
-								<span>Weekly premium</span>
+								<strong>{activeWeeklyCoverage}</strong>
+								<span>Active weekly coverage</span>
+							</div>
+							<div className="metric-card">
+								<strong>₹{totalEarnedBack}</strong>
+								<span>Earned back from claims</span>
 							</div>
 							<div className="metric-card">
 								<strong>{Math.round((quote?.aiSignal?.riskScore || 0.45) * 100)}%</strong>
 								<span>Risk score</span>
-							</div>
-							<div className="metric-card">
-								<strong>{autoClaims.length}</strong>
-								<span>Auto claims</span>
 							</div>
 						</div>
 						<div className="dashboard-actions">
@@ -290,6 +298,7 @@ function DashboardPage({ user, onRestart, onLogout }) {
 							<p><strong>Coverage:</strong> {user.coverageHours || 24} hours daily</p>
 							<p><strong>Zone source:</strong> {quote?.weatherSnapshot?.source || "live / mock"}</p>
 							<p><strong>Model:</strong> {quote?.aiSignal?.model || "mock-ml-risk-v1"}</p>
+							<p><strong>Upcoming weather:</strong> {weatherAlert?.summary || "Monitoring in progress"}</p>
 							<p><strong>Policy window:</strong> 7-day rolling protection</p>
 						</div>
 					</div>

@@ -8,6 +8,7 @@ const policyRoutes = require("./routes/policyRoutes");
 const premiumRoutes = require("./routes/premiumRoutes");
 const claimRoutes = require("./routes/claimRoutes");
 const triggerRoutes = require("./routes/triggerRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 const { startTriggerScheduler } = require("./services/triggerService");
 
 const app = express();
@@ -23,6 +24,7 @@ app.use("/api/policy", policyRoutes);
 app.use("/api/premium", premiumRoutes);
 app.use("/api/claim", claimRoutes);
 app.use("/api/triggers", triggerRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/healthz", (req, res) => {
   res.json({ status: "ok" });
